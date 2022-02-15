@@ -8,8 +8,8 @@ local fs = require "luci.openclash"
 local uci = require("luci.model.uci").cursor()
 local CHIF = "0"
 
-font_green = [[<font color="green">]]
-font_off = [[</font>]]
+font_green = [[<b style=color:green>]]
+font_off = [[</b>]]
 bold_on  = [[<strong>]]
 bold_off = [[</strong>]]
 align_mid = [[<p align="center">]]
@@ -181,6 +181,7 @@ mt=tb:option(DummyValue,"mtime",translate("Update Time"))
 sz=tb:option(DummyValue,"size",translate("Size"))
 ck=tb:option(DummyValue,"check",translate("Grammar Check"))
 ck.template="openclash/cfg_check"
+nm.template="openclash/sub_info_show"
 
 btnis=tb:option(Button,"switch",translate("Switch Config"))
 btnis.template="openclash/other_button"
@@ -200,6 +201,17 @@ uci:set("openclash", "config", "config_path", "/etc/openclash/config/"..e[t].nam
 uci:commit("openclash")
 HTTP.redirect(luci.dispatcher.build_url("admin", "services", "openclash", "config"))
 end
+
+btned=tb:option(Button,"edit",translate("Edit"))
+btned.render=function(o,t,a)
+o.inputstyle="apply"
+Button.render(o,t,a)
+end
+btned.write=function(a,t)
+	local file_path = "etc/openclash/config/" .. fs.basename(e[t].name)
+	HTTP.redirect(DISP.build_url("admin", "services", "openclash", "other-file-edit", "config", "%s") %file_path)
+end
+
 
 btncp=tb:option(Button,"copy",translate("Copy Config"))
 btncp.template="openclash/other_button"
@@ -397,7 +409,7 @@ def.write = function(self, section, value)
 end
 
 local t = {
-    {Commit, Apply}
+    {Commit, Create, Apply}
 }
 
 a = m:section(Table, t)
@@ -409,6 +421,11 @@ o.write = function()
 	fs.unlink("/tmp/Proxy_Group")
   uci:commit("openclash")
 end
+
+o = a:option(DummyValue, "Create", " ")
+o.rawhtml = true
+o.template = "openclash/input_file_name"
+o.value = "/etc/openclash/config/"
 
 o = a:option(Button, "Apply", " ")
 o.inputtitle = translate("Apply Settings")
